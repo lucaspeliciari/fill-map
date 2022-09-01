@@ -1,7 +1,9 @@
+// this is the wip version
+
+
 #include <iostream>
 #include <queue>
 #include <fstream>
-#include <vector>
 #include <math.h>
 #include <chrono>
 
@@ -59,7 +61,7 @@ typedef struct
 COLOR; 
 
 int index(int i, int j, int width, int height);
-bool fill(int i, int j, int width, int height, vector<COLOR>& pixels, COLOR& currentColor);  // too many args
+bool fill(int i, int j, int width, int height, COLOR* pixels, COLOR& currentColor);  // too many args
 bool isWhite(COLOR pixel);
 void setColor(COLOR& pixel, COLOR currentColor);
 void incrementColor(COLOR& currentColor);
@@ -92,10 +94,9 @@ int main(int argc, char *argv[])
     BITMAPINFOHEADER infoHeader;
     infile.read((char*)&infoHeader, sizeof(BITMAPINFOHEADER));
 
-    if (fileHeader.bfType != 0x4d42 || fileHeader.bfOffBits != 54 || infoHeader.biSize != 40 ||
-        infoHeader.biBitCount != 24 || infoHeader.biCompression != 0)
+    if (fileHeader.bfType != 0x4d42)
     {
-        cout << "Unsupported format: file is not .bmp" << endl;
+        cout << "Unsupported format: file is not BMP" << endl;
         return 3;
     }
 
@@ -105,14 +106,13 @@ int main(int argc, char *argv[])
     int padding = (4 - (width * sizeof(COLOR)) % 4) % 4;  // haven't tested with compression
     printf("Resolution: %ix%i, %i-bit  Padding: %i\n", width, abs(height), infoHeader.biBitCount, padding);
 
-    vector<COLOR> pixels;
-    for (int i = 0; i < size; i += 3)
+    COLOR* pixels = new COLOR[size/3];
+    for (int i = 0; i < size/3; i += 1)
     {
         COLOR buffer;
         infile.read((char*)&buffer, sizeof(COLOR));
-        pixels.push_back(buffer);
+        pixels[i] = buffer;
     }
-    cout << "Vector size: " << pixels.size() << "  OK: " << (pixels.size() == size / 3) << endl;
 
     infile.close();
 
@@ -130,20 +130,20 @@ int main(int argc, char *argv[])
     cout << "finished" << endl << totalColors << " colors generated" << endl;
 
 
-    cout << "Filling map regions... " << endl;
+    cout << "Filling map regions";
     srand (time(NULL));  // change seed for rand(), otherwise it will keep using the same
     bool* usableColors = new bool[totalColors];
     for (int i = 0; i < totalColors; i++) usableColors[i] = true;
     int colorIndex = 0;
 
-    int percentStep = 0;
+    int percentStep = 33;
     for (int i = 0; i < width; i++)
-    {
+    {   
         float percent = round(100 * i / width);
-        if (percent >= percentStep)
+        if (percent >= percentStep) 
         {
-            cout << percent << " %" << endl;
-            percentStep += 10;
+            cout << ".";
+            percentStep += 33;
         }
         for (int j = 0; j < height; j++)
         {
@@ -159,10 +159,9 @@ int main(int argc, char *argv[])
     }
     int regionsPainted = 0;
     for (int i = 0; i < totalColors; i++) if (!usableColors[i]) regionsPainted++;
-    cout << "Finished" << endl << regionsPainted << " regions painted" << endl;
-    printf("COLOR CHECK: %i\n", totalColors);
+    cout << " finished" << endl << regionsPainted << " regions painted" << endl;
 
-    cout << "Writing to file... " << endl;
+    cout << "Writing to file... ";
     ofstream outfile{outfile_path, ios_base::binary};
     if (!outfile)
     {
@@ -170,13 +169,14 @@ int main(int argc, char *argv[])
         return 4;
     }
 
-    cout << "Writing header" << endl;
+    cout << "finished" << endl << "Writing header" << endl;
     outfile.write((char*)&fileHeader, sizeof(BITMAPFILEHEADER));
     outfile.write((char*)&infoHeader, sizeof(BITMAPINFOHEADER));
 
     cout << "Writing data" << endl;
 
-    for (int i = 0; i < pixels.size(); i++)
+    // for (int i = 0; i < pixels.size(); i++)
+    for (int i = 0; i < size/3; i++)
     {
         COLOR pixel = pixels[i];
         outfile.write((char*)&pixel, sizeof(COLOR));
@@ -209,7 +209,7 @@ int index(int i, int j, int width, int height)
 };
 
 
-bool fill(int i, int j, int width, int height, vector<COLOR>& pixels, COLOR& currentColor)
+bool fill(int i, int j, int width, int height, COLOR* pixels, COLOR& currentColor)
 {
     int curIndex = index(i, j, width, height);
     if (isWhite(pixels[curIndex]))
