@@ -1,6 +1,3 @@
-// this is the wip version
-
-
 #include <iostream>
 #include <queue>
 #include <fstream>
