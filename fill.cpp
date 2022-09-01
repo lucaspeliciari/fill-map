@@ -257,8 +257,7 @@ bool fill(int i, int j, int width, int height, COLOR* pixels, COLOR& currentColo
                 q.push(newN);
             }
         }
-        incrementColor(currentColor);
-        return true;
+       return true;
     }
     return false;
 };
