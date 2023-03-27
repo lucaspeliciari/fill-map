@@ -1,4 +1,4 @@
-<h1 align="center">Flood fill</h1>
+<h1 align="center">Fill Map</h1>
 <p>Paint regions on a map unique colors</p>
 <p>Paints area around the first white pixel it finds, using flood fill, with black pixels as borders</p>
 <p>Uses a queue instead of function recursion</p>
