@@ -58,7 +58,7 @@ typedef struct
 COLOR; 
 
 int index(int i, int j, int width, int height);
-bool fill(int i, int j, int width, int height, COLOR* pixels, COLOR& currentColor);  // too many args
+bool fill(int i, int j, int width, int height, COLOR* pixels, COLOR& currentColor);
 bool isWhite(COLOR pixel);
 void setColor(COLOR& pixel, COLOR currentColor);
 void incrementColor(COLOR& currentColor);
@@ -67,7 +67,6 @@ void incrementColor(COLOR& currentColor);
 int main(int argc, char *argv[])
 {
     auto start = high_resolution_clock::now();
-    cout << "Starting" << endl;
 
     if (argc != 3)
     {
@@ -97,6 +96,8 @@ int main(int argc, char *argv[])
         return 3;
     }
 
+    cout << "Starting" << endl;
+
     const int width = infoHeader.biWidth;
     const int height = infoHeader.biHeight;  // if positive starts from bottom-left
     int size = width * abs(height) * sizeof(COLOR);
@@ -110,7 +111,6 @@ int main(int argc, char *argv[])
         infile.read((char*)&buffer, sizeof(COLOR));
         pixels[i] = buffer;
     }
-
     infile.close();
 
     cout <<"Generating colors... ";
@@ -125,18 +125,18 @@ int main(int argc, char *argv[])
     }
     
     cout << "finished" << endl << totalColors << " colors generated" << endl;
-
-
-    cout << "Filling map regions";
-    srand (time(NULL));  // change seed for rand(), otherwise it will keep using the same
+    
+    srand (time(NULL));  // change seed for rand()
     bool* usableColors = new bool[totalColors];
     for (int i = 0; i < totalColors; i++) usableColors[i] = true;
     int colorIndex = 0;
 
+    cout << "Filling map regions";
     int percentStep = 33;
     for (int i = 0; i < width; i++)
     {   
         float percent = round(100 * i / width);
+
         if (percent >= percentStep) 
         {
             cout << ".";
@@ -191,9 +191,24 @@ int main(int argc, char *argv[])
 
 int index(int i, int j, int width, int height)
 {
-    if (i >= width)  // this is true sometimes with certain files, but it does not seem to break anything
+    if (i >= width)  
     {
-        cout << "Index error: index greater than width" << endl;
+        // cout << "Index error: i greater than width" << endl;
+        return -1;
+    }
+    else if (i < 0)
+    {
+        // cout << "Index error: i is negative" << endl;
+        return -1;
+    }
+    if (j >= height)
+    {
+        // cout << "Index error: j greater than height" << endl;
+        return -1;
+    }
+    else if (j < 0)
+    {
+        // cout << "Index error: j is negative" << endl;
         return -1;
     }
 
@@ -221,6 +236,7 @@ bool fill(int i, int j, int width, int height, COLOR* pixels, COLOR& currentColo
             Node p = q.front();
             q.pop();
 
+
             // up
             curIndex = index(p.x, p.y - 1, width, height);
             if (isWhite(pixels[curIndex]) && p.y - 1 >= 0)
@@ -229,7 +245,7 @@ bool fill(int i, int j, int width, int height, COLOR* pixels, COLOR& currentColo
                 Node newN(p.x, p.y-1);
                 q.push(newN);
             }
-            
+
             // right
             curIndex = index(p.x + 1, p.y, width, height);
             if (isWhite(pixels[curIndex]) && p.x + 1 < width)
@@ -278,6 +294,7 @@ void setColor(COLOR& pixel, COLOR currentColor)
 }
 
 
+// TODO improve color generation
 void incrementColor(COLOR& currentColor)
 {
     if (currentColor.r + 1 < 256)
